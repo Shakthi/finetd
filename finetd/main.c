@@ -300,21 +300,17 @@ void serviceFd(int fd,int port, int control[2]){
 
 
 
-struct inetServicesDefintion {
+struct InetServicesDefintion {
     int sourcePort;
     int destinationPort;
     const char * startCommand;
-    const char **startCommandArgs;
     const char * stopCommand;
-    const char **stopCommandArgs;
 };
 
 
-struct inetServicesRecord {
+struct InetServicesRecord {
     int status;
     pid_t pid;
-    const char * command;
-    const char **args;
     int masterSocket;
 };
 #include <signal.h>
@@ -337,27 +333,41 @@ struct sigaction siga;
 //}
 
 
+void die(const char * message){
+    perror(message);
+    exit(EXIT_FAILURE);
+}
+
+#define ArraySize(x) (sizeof (x)/sizeof(x[0]))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 int main(int argc, const char * argv[]) {
-//    myfunct(f);
-    
-    struct inetServicesDefintion u={
-        
-    };
-    int  ports[] = {2007};
-    int controlPipe[2];
-    if(pipe(controlPipe)==-1)
-    perror("Ocorreu um erro a criar um pipe");
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    
-    int busyPorts[2]={0,0};
 
     
-    int sockets[2]={};
+    const struct InetServicesDefintion allServices[]={
+        {
+            2010,
+            4020,
+            "/usr/local/bin/node /usr/local/bin/serve -l 4020",
+        }
+    };
+    
+    
+    struct InetServicesRecord inetServicesRecord[20]={{0}};
+    
+    
+    int controlPipe[2]; //Pipe to signal death of child
+    if(pipe(controlPipe)==-1)
+        die("cannot create pipe");
+
+
+
+    
+    fd_set readfds;
     int maxfd=0;
-    for (int i=0; i<1; i++) {
-        sockets[i] = listenAtPort(ports[i]);
-        maxfd = maxfd>sockets[i]?maxfd:sockets[i];
+    for (int i=0; i<ArraySize(allServices); i++) {
+        inetServicesRecord[i].masterSocket = listenAtPort(allServices[i].sourcePort);
+        maxfd = MAX(maxfd,inetServicesRecord[i].masterSocket);
       //add master socket to set
     }
     
