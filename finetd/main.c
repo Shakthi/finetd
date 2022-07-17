@@ -28,6 +28,8 @@
 #define MIN(x, y) (((x) < (y)) ? (x) : (y)
 
 #include "service.h"
+#include "argprocess.h"
+
 
 void
 die(const char *message)
@@ -45,9 +47,11 @@ listenAtPort(int port)
 	int sockfd_v4, option;
 	int BACKLOG = 20;
 
+    printf("Asked to listen at port %d", port);
+
 
 	if ((sockfd_v4 = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		perror("socket");
+		die("socket");
 		return 1;
 	}
 	setsockopt(sockfd_v4, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(int));
@@ -72,19 +76,17 @@ listenAtPort(int port)
 
 
 
+
 int
 main(int argc, const char *argv[])
 {
 
 
-	const struct InetServicesDefintion allServices[] = {
-		{
-			2014,
-			4028,
-			"/usr/local/bin/node /usr/local/bin/serve -l 4028",
-		}
-	};
-
+    struct InetServicesDefintion * allServices;
+    int totalServices=0;
+    processArgs(argc,argv,&allServices,&totalServices);
+    
+    
 
 	struct InetServicesRecord inetServicesRecord[20] = {{0}};
 
@@ -101,7 +103,7 @@ main(int argc, const char *argv[])
 	int maxfd = 0;
 	maxfd = MAX(maxfd, controlPipe[0]);
 
-	for (int i = 0; i < ArraySize(allServices); i++) {
+	for (int i = 0; i < totalServices; i++) {
 		inetServicesRecord[i].masterSocket = listenAtPort(allServices[i].sourcePort);
 		inetServicesRecord[i].status = 1;
 		maxfd = MAX(maxfd, inetServicesRecord[i].masterSocket);
