@@ -15,6 +15,8 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
+
 
 
 int listenAtPort(int port){
@@ -51,13 +53,12 @@ int listenAtPort(int port){
 
 
 
-void serviceFd(int fd,int port){
+void serviceFd(int fd,int port, int control[2]){
     
     pid_t pid = fork();
-//    if(pid>0)
-//        close(fd);
+   
     if(pid == 0){
-        
+        close(control[0]);
 
         char str[20];
             struct sockaddr_storage client_saddr;
@@ -77,13 +78,15 @@ void serviceFd(int fd,int port){
         printf("Request from %s\n",str);
 
         char cmd[1024];
-        sprintf(cmd, "/usr/local/bin/node /usr/local/bin/serve -l %d 1>/dev/null",remoteport);
+        sprintf(cmd, "/usr/local/bin/node /usr/local/bin/serve -l %d ",remoteport);
         printf("cmd %s",cmd);
 
         pid_t pid = fork();
         if(pid==0){
             exit(system(cmd));
         }
+        
+        printf("pid of sub pt %d\n",pid);
         
         int clients[20]={fd_new};
         int remotes[20]={0};
@@ -112,7 +115,7 @@ void serviceFd(int fd,int port){
             
             if (connect(remotes[0], (struct sockaddr *) &remote_addr, sizeof(remote_addr)) == 0)
             {
-                printf("Conected");
+                printf("Conected\n");
                 
                 
                 break;
@@ -129,37 +132,84 @@ void serviceFd(int fd,int port){
         fd_set readfds;
         char buffer [4096];
         
+        int k=0;
+        
         while (1) {
             FD_ZERO(&readfds);
             FD_SET(fd, &readfds);
-            int maxFd=0;
+            int maxFd=fd;
+            
+            printf("maxfd %d\n",fd);
             for (int i=0,clientCount=0; (i<20 && clientCount<maxClients); i++) {
-                printf("came inside");
 
                 if (clients[i]) {
                     FD_SET(clients[i], &readfds);
                     FD_SET(remotes[i], &readfds);
-                    printf("fd set");
 
 
                     maxFd = maxFd>clients[i]?maxFd:clients[i];
                     maxFd = maxFd>remotes[i]?maxFd:remotes[i];
-
                     clientCount++;
                 }
             }
             
             
-            printf("before service select");
+            printf("before service selec%d\n",k++);
 
-            
-            if (select(maxFd+1, &readfds, NULL, NULL, NULL) < 0)
+            struct timeval tv = {20, 0};   // sleep for ten minutes!
+
+            int ret = select(maxFd+1, &readfds, NULL, NULL, &tv);
+            if(ret<0)
             {
                 perror("use_tunnel: select()");
                 break;
+            }else if(ret==0){
+                char retcmd[]={"stoping listen 12345"};
+                sprintf(retcmd, "stoping listen %5d",port);
+                write(control[1],retcmd,sizeof(retcmd));
+                printf("exitin %d",pid);
+                int ret=kill(pid, SIGTERM);
+                if(ret==-1)
+                    perror("kill");
+                exit(0);
             }
             
-            printf("after service select");
+            printf("after service select\n");
+            
+           
+            if (FD_ISSET(fd, &readfds)) {//New client
+                           
+                           printf("new cleint");
+                           
+                           struct sockaddr_storage client_saddr;
+                           socklen_t addrlen = sizeof (struct sockaddr_storage);
+                           int fd_new;
+                           if ((fd_new = accept (fd, (struct sockaddr *) &client_saddr, &addrlen)) == -1){
+                               perror("read new client");
+                           }
+                        printf("new cleintaccept");
+
+                           
+                           for (int i=0; i<20; i++) {
+                               if(clients[i]==0){
+                                   clients[i]=fd_new;
+                                   struct sockaddr_in remote_addr;
+                                          remote_addr.sin_family = AF_INET;
+                                          remote_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+                                          remote_addr.sin_port = htons(remoteport);
+
+                                       
+
+                                          remotes[i] = socket(AF_INET, SOCK_STREAM, 0);
+                                   if (connect(remotes[i], (struct sockaddr *) &remote_addr, sizeof(remote_addr)) != 0)
+                                       perror("new connect");
+                                   else printf("new connected ");
+                                   maxClients++;
+                                   break;
+                               }
+                           }
+                       
+                       }
             
             for (int i=0,clientCount=0; (i<20 && clientCount<maxClients); i++) {
                    if (clients[i]&&FD_ISSET(clients[i], &readfds)) {
@@ -167,10 +217,11 @@ void serviceFd(int fd,int port){
                        int count = recv(clients[i], buffer, sizeof(buffer), 0);
                        if (count < 0)
                        {
-                           perror("use_tunnel: recv(rc.client_socket)");
+                           perror("use_tunnel 206");
                            close(clients[i]);
                            close(remotes[i]);
                            clients[i]=0;
+                           remotes[i]=0;
                            maxClients--;
                        }
 
@@ -180,64 +231,47 @@ void serviceFd(int fd,int port){
                            close(remotes[i]);
                            
                            clients[i]=0;
+                           remotes[i]=0;
                            maxClients--;
-                       }
-
-                       send(remotes[i], buffer, count, 0);
+                           
+                           printf("Ended\n");
+                       }else
+                           send(remotes[i], buffer, count, 0);
                        clientCount++;
                    }
                 
                 
-                    if (FD_ISSET(remotes[i], &readfds))
+                    if (remotes[i] && FD_ISSET(remotes[i], &readfds))
                     {
                         int count = recv(remotes[i], buffer, sizeof(buffer), 0);
                         if (count < 0)
                         {
-                            perror("use_tunnel: recv(rc.remote_socket)");
+                            perror("use_tunnel: 235");
                             close(remotes[i]);
                             close(clients[i]);
+                            clients[i]=0;
+                            remotes[i]=0;
+                            maxClients--;
+
                         }
 
                         if (count == 0)
                         {
-                            perror("use_tunnel: recv(rc.remote_socket)");
+                            perror("use_tunnel: 244");
                             close(remotes[i]);
                             close(clients[i]);
+                            clients[i]=0;
+                            remotes[i]=0;
+                            maxClients--;
+
 
                         }
-
-                        send(clients[i], buffer, count, 0);
+                        else
+                            send(clients[i], buffer, count, 0);
 
                     }
                 
-                    if (FD_ISSET(fd, &readfds)) {//New client
-                        
-                        struct sockaddr_storage client_saddr;
-                        socklen_t addrlen = sizeof (struct sockaddr_storage);
-                        int fd_new;
-                        if ((fd_new = accept (fd, (struct sockaddr *) &client_saddr, &addrlen)) == -1){
-                            perror("read new client");
-                        }
-                        
-                        for (int i=0; i<20; i++) {
-                            if(clients[i]==0){
-                                clients[i]=fd_new;
-                                struct sockaddr_in remote_addr;
-                                       remote_addr.sin_family = AF_INET;
-                                       remote_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-                                       remote_addr.sin_port = htons(remoteport);
-
-                                    
-
-                                       remotes[i] = socket(AF_INET, SOCK_STREAM, 0);
-                                if (connect(remotes[i], (struct sockaddr *) &remote_addr, sizeof(remote_addr)) != 0)
-                                    perror("new connect");
-
-                                break;
-                            }
-                        }
-                    
-                    }
+           
 
                 
                 
@@ -280,12 +314,36 @@ struct inetServicesRecord {
     const char **args;
     int masterSocket;
 };
+#include <signal.h>
 
+#include <unistd.h>
+
+struct sigaction siga;
+
+void f(int sig) {
+    printf("Caught signal %d\n", sig);
+}
+
+// sets f as handler to all the possible signals.
+void myfunct(void(*f)(int sig)) {
+    siga.sa_handler = f;
+    for (int sig = 1; sig <= 32; ++sig) {
+        // this might return -1 and set errno, but we don't care
+        sigaction(sig, &siga, NULL);
+    }
+}
 
 
 int main(int argc, const char * argv[]) {
+//    myfunct(f);
     
-    int  ports[] = {3056};
+    struct inetServicesDefintion u={
+        
+    };
+    int  ports[] = {2001};
+    int controlPipe[2];
+    pipe(controlPipe);
+    close(controlPipe[1]);
     fd_set readfds;
     FD_ZERO(&readfds);
     
@@ -302,12 +360,15 @@ int main(int argc, const char * argv[]) {
     
     while (1) {
         FD_ZERO(&readfds);
+//        FD_SET(controlPipe[0], &readfds);
+
         if(!busyPorts[0])
             FD_SET(sockets[0], &readfds);
          
         
-        int activity = select( maxfd + 1 , &readfds , NULL , NULL , NULL);
+        int activity = select( maxfd+1 , &readfds , NULL , NULL , NULL);
 
+        printf("after select main");
         if ((activity < 0) && (errno!=EINTR))
         {
             printf("select error");
@@ -315,9 +376,26 @@ int main(int argc, const char * argv[]) {
         for (int fd=0,i = 0; fd < (maxfd + 1); fd++) {
               if (FD_ISSET (fd, &readfds)) {  // fd is ready for reading
                   busyPorts[0]=1;
-                  serviceFd(fd,ports[0]);
+                  serviceFd(fd,ports[0],controlPipe);
                   i++;
               }
+        }
+        
+        
+        if (FD_ISSET(controlPipe[0],&readfds)) {
+            char message[]="stoping listen 12345";
+            read(controlPipe[0], message, sizeof(message));
+            
+            char stoping[]="stoping";
+            char listen[]="listen";
+            int childPort;
+            
+            sscanf(message, "%s %s %d",stoping,listen,&childPort);
+            
+            
+            
+            
+            
         }
                           
 
