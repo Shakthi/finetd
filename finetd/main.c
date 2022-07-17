@@ -59,6 +59,7 @@ void serviceFd(int fd,int port, int control[2]){
    
     if(pid == 0){
         close(control[0]);
+        
 
         char str[20];
             struct sockaddr_storage client_saddr;
@@ -83,6 +84,8 @@ void serviceFd(int fd,int port, int control[2]){
 
         pid_t pid = fork();
         if(pid==0){
+            close(control[0]);
+            close(control[1]);
             exit(system(cmd));
         }
         
@@ -319,19 +322,19 @@ struct inetServicesRecord {
 #include <unistd.h>
 
 struct sigaction siga;
-
-void f(int sig) {
-    printf("Caught signal %d\n", sig);
-}
-
-// sets f as handler to all the possible signals.
-void myfunct(void(*f)(int sig)) {
-    siga.sa_handler = f;
-    for (int sig = 1; sig <= 32; ++sig) {
-        // this might return -1 and set errno, but we don't care
-        sigaction(sig, &siga, NULL);
-    }
-}
+//
+//void f(int sig) {
+//    printf("Caught signal %d\n", sig);
+//}
+//
+//// sets f as handler to all the possible signals.
+//void myfunct(void(*f)(int sig)) {
+//    siga.sa_handler = f;
+//    for (int sig = 1; sig <= 32; ++sig) {
+//        // this might return -1 and set errno, but we don't care
+//        sigaction(sig, &siga, NULL);
+//    }
+//}
 
 
 int main(int argc, const char * argv[]) {
@@ -340,10 +343,10 @@ int main(int argc, const char * argv[]) {
     struct inetServicesDefintion u={
         
     };
-    int  ports[] = {2001};
+    int  ports[] = {2007};
     int controlPipe[2];
-    pipe(controlPipe);
-    close(controlPipe[1]);
+    if(pipe(controlPipe)==-1)
+    perror("Ocorreu um erro a criar um pipe");
     fd_set readfds;
     FD_ZERO(&readfds);
     
@@ -358,39 +361,48 @@ int main(int argc, const char * argv[]) {
       //add master socket to set
     }
     
+    
     while (1) {
         FD_ZERO(&readfds);
-//        FD_SET(controlPipe[0], &readfds);
 
         if(!busyPorts[0])
             FD_SET(sockets[0], &readfds);
-         
+        else
+            FD_SET(controlPipe[0], &readfds);
+            
+            
+
         
-        int activity = select( maxfd+1 , &readfds , NULL , NULL , NULL);
+        int activity = select( sockets[0]+1 , &readfds , NULL , NULL , NULL);
 
         printf("after select main");
         if ((activity < 0) && (errno!=EINTR))
         {
-            printf("select error");
+            perror("select error");
         }
-        for (int fd=0,i = 0; fd < (maxfd + 1); fd++) {
-              if (FD_ISSET (fd, &readfds)) {  // fd is ready for reading
+              if (FD_ISSET (sockets[0], &readfds)) {  // fd is ready for reading
+                  
+                    
                   busyPorts[0]=1;
-                  serviceFd(fd,ports[0],controlPipe);
-                  i++;
+                  serviceFd(sockets[0],ports[0],controlPipe);
               }
-        }
         
+
         
         if (FD_ISSET(controlPipe[0],&readfds)) {
+            printf("controlPipe");
             char message[]="stoping listen 12345";
-            read(controlPipe[0], message, sizeof(message));
+            int k = read(controlPipe[0], message, sizeof(message));
             
             char stoping[]="stoping";
             char listen[]="listen";
             int childPort;
             
             sscanf(message, "%s %s %d",stoping,listen,&childPort);
+            
+            if(strcmp(stoping,"stoping")==0 && strcmp(listen,"listen")==0){
+                
+            }
             
             
             
