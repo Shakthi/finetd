@@ -367,8 +367,8 @@ int main(int argc, const char * argv[]) {
 
         if(!busyPorts[0])
             FD_SET(sockets[0], &readfds);
-        else
-            FD_SET(controlPipe[0], &readfds);
+
+        FD_SET(controlPipe[0], &readfds);
             
             
 
