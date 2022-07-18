@@ -8,6 +8,6 @@ project(finetd)
 #However, the file(GLOB...) allows for wildcard additions:
 file(GLOB SOURCES "src/*.c")
 
-add_executable(finetdex ${SOURCES})
+add_executable(finetd ${SOURCES})
 
-install(TARGETS finetdex DESTINATION /usr/local/bin)
+install(TARGETS finetd DESTINATION /usr/local/bin)
