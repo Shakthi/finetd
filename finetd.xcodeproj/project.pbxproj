@@ -51,7 +51,7 @@
 		53484CDC287F45BE00450F05 = {
 			isa = PBXGroup;
 			children = (
-				53484CE7287F45BE00450F05 /* finetd */,
+				53484CE7287F45BE00450F05 /* src */,
 				53484CE6287F45BE00450F05 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,7 +64,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		53484CE7287F45BE00450F05 /* finetd */ = {
+		53484CE7287F45BE00450F05 /* src */ = {
 			isa = PBXGroup;
 			children = (
 				53C06B3F288509B800ADA004 /* service.sample.conf */,
@@ -76,7 +76,7 @@
 				53C06B402885128000ADA004 /* utils.h */,
 				53C06B412885128000ADA004 /* utils.c */,
 			);
-			path = finetd;
+			path = src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
