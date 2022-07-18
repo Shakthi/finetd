@@ -141,6 +141,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("server select");
                 break;
             } else if (ret == 0) {
+                slogf("select timeout ");
                 if(!def.stopCommand){
                     char retcmd[] = "stoping listen 12345";
                     sprintf(retcmd, "stoping listen %5d", index);
@@ -207,14 +208,18 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
+                        slogf("-1");
                     }
                     if (count == 0) {
+                        
                         close(clients[i]);
                         close(remotes[i]);
 
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
+                        slogf("count 0 ");
+
 
                     } else
                         send(remotes[i], buffer, count, 0);
