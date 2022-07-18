@@ -7,6 +7,34 @@
 //
 
 #include "service.h"
+
+pid_t execute(const char * cmd){
+    pid_t pid = fork();
+    if (pid == 0) {
+        slogf("For system  \n");
+        char *args[100];
+        char * rest = strdup(cmd);
+        char* token = NULL;
+        slogf("args %s\n",cmd);
+
+        int i = 0;
+        while ((token = strtok_r(rest, " ", &rest)))
+        {
+            args[i] = token;
+            slogf("args %s\n",args[i]);
+            i++;
+        }
+        
+        
+        args[i]=NULL;
+        execvp(args[0], args);
+        die("Failed exec");
+
+    }
+    return  pid;
+}
+
+
 void
 serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
 {
@@ -31,39 +59,14 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
 
         inet_ntop(AF_INET, &(ptr->sin_addr), str, sizeof(str));
 
-        printf("Request from %s\n", str);
+        slogf("Request from %s\n", str);
 
         char cmd[1024];
         sprintf(cmd, def.startCommand, def.destinationPort);
-        printf("cmd %s", cmd);
+        slogf("cmd %s", cmd);
 
-        pid_t pid = fork();
-        if (pid == 0) {
-            printf("For system  \n");
-
-            close(control[0]);
-            close(control[1]);
-            char *args[100];
-            char* rest = cmd;
-            char* token = NULL;
-            printf("args %s\n",cmd);
-
-            int i = 0;
-            while ((token = strtok_r(rest, " ", &rest)))
-            {
-                args[i] = token;
-                printf("args %s\n",args[i]);
-                i++;
-            }
-            
-            
-            args[i]=NULL;
-
-            execvp(args[0], args);
-
-        }
-        printf("pid of sub pt %d\n", pid);
-
+        pid_t pid = execute(cmd);
+        
         int clients[20] = {fd_new};
         int remotes[20] = {0};
 
@@ -90,7 +93,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("destination socket creation");
 
             if (connect(remotes[0], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) == 0) {
-                printf("Conected\n");
+                slogf("Conected\n");
 
 
                 break;
@@ -128,7 +131,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
             }
 
 
-            printf("before service selec%d\n", k++);
+            slogf("before service selec%d\n", k++);
 
             struct timeval tv = {20, 0};    /* sleep for ten minutes */
 
@@ -138,12 +141,24 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("server select");
                 break;
             } else if (ret == 0) {
-                char retcmd[] = {"stoping listen 12345"};
-                sprintf(retcmd, "stoping listen %5d", index);
-                write(control[1], retcmd, sizeof(retcmd));
-                int ret = kill(pid, SIGTERM);
-                if (ret == -1)
-                    die("kill");
+                if(!def.stopCommand){
+                    char retcmd[] = "stoping listen 12345";
+                    sprintf(retcmd, "stoping listen %5d", index);
+                    write(control[1], retcmd, sizeof(retcmd));
+                    char killcmd[] = "kill xxxxxx";
+                    sprintf(killcmd, "kill %d",pid);
+                    
+                    int ret = execute(killcmd);
+                    if (ret == -1)
+                        die("kill");
+                    
+                }
+                else{
+                    int ret = execute(def.stopCommand);
+                    if (ret == -1)
+                        die("kill");
+                    
+                }
                 exit(0);
             }
 

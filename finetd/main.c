@@ -27,16 +27,10 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y)
 
+
 #include "service.h"
 #include "argprocess.h"
 
-
-void
-die(const char *message)
-{
-	perror(message);
-	exit(EXIT_FAILURE);
-}
 
 
 int
@@ -47,7 +41,7 @@ listenAtPort(int port)
 	int sockfd_v4, option;
 	int BACKLOG = 20;
 
-    printf("Asked to listen at port %d", port);
+    slogf("Asked to listen at port %d\n", port);
 
 
 	if ((sockfd_v4 = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -68,7 +62,7 @@ listenAtPort(int port)
 		die("listen");
 		return -1;
 	}
-	printf("listenning at port %d", port);
+	slogf("listenning at port %d\n", port);
 	return sockfd_v4;
 }
 
@@ -76,7 +70,7 @@ listenAtPort(int port)
 
 
 
-
+int LOG_ENABLED = 1;
 int
 main(int argc, const char *argv[])
 {
@@ -104,6 +98,7 @@ main(int argc, const char *argv[])
 	maxfd = MAX(maxfd, controlPipe[0]);
 
 	for (int i = 0; i < totalServices; i++) {
+        slogf("new service %d\n",allServices[i].sourcePort);
 		inetServicesRecord[i].masterSocket = listenAtPort(allServices[i].sourcePort);
 		inetServicesRecord[i].status = 1;
 		maxfd = MAX(maxfd, inetServicesRecord[i].masterSocket);
@@ -160,6 +155,6 @@ main(int argc, const char *argv[])
 
 
 	//insert code here...
-		printf("Hello, World!\n");
+		slogf("Hello, World!\n");
 	return 0;
 }

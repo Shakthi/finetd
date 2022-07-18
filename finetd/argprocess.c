@@ -9,7 +9,7 @@
 #include <string.h>
 #include "argprocess.h"
 #include "service.h"
-
+#include "utils.h"
 
 void 
 processArgs(int argc, const char *argv[], struct InetServicesDefintion **allService, int *totalServices)
@@ -18,20 +18,32 @@ processArgs(int argc, const char *argv[], struct InetServicesDefintion **allServ
 	
 	struct InetServicesDefintion servies[20];
 
-	if (argc == 3 && strcmp(argv[1], "-c") == 0) {
+	if (1 || argc == 3 && strcmp(argv[1], "-c") == 0) {
 		*totalServices = 0;
-		FILE *file = fopen(argv[2], "r");
+		FILE *file = fopen("/Volumes/Development/Projects/finetd/finetd/service.sample.conf", "r");
 		while (!feof(file)) {
 			int source, destination;
 			char command[1024];
 			if(fscanf(file, "%d %d", &source, &destination)==0)
                 break;
 
-			fgets(command, 1024, file);
+
+			if(!fgets(command, 1024, file))
+                break;
+            command[strcspn(command, "\n")] = 0;
+
 			servies[*totalServices].sourcePort = source;
 			servies[*totalServices].destinationPort = destination;
-			servies[*totalServices].startCommand = strdup(command);
 
+            char * rest = command;
+            if(*rest == ' ')
+                rest++;
+            servies[*totalServices].startCommand = strdup(strtok_r(rest, ";", &rest));
+            
+            if(rest)
+                servies[*totalServices].stopCommand = strdup(strtok_r(rest, ";", &rest));
+
+            
 			(*totalServices)++;
 			if (*totalServices >= 20) {
 				die("Exeeds maxsupported services");
@@ -42,9 +54,8 @@ processArgs(int argc, const char *argv[], struct InetServicesDefintion **allServ
 	}
 	*allService = malloc(sizeof(servies));
 	memcpy(*allService, servies, sizeof(servies));
-    (*totalServices)--;
 
-    printf("total servces descover %d\n",*totalServices);
+    slogf("total servces descovered %d\n",*totalServices);
 
     /*
 

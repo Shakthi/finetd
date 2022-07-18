@@ -17,12 +17,12 @@
 //
 #include <errno.h>
 #include <sys/select.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include "utils.h"
 
 
 struct InetServicesDefintion {

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		53484CE9287F45BE00450F05 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 53484CE8287F45BE00450F05 /* main.c */; };
+		53C06B3B28847CF000ADA004 /* service.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C06B3A28847CF000ADA004 /* service.c */; };
+		53C06B3E28848C9F00ADA004 /* argprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C06B3D28848C9F00ADA004 /* argprocess.c */; };
+		53C06B422885128000ADA004 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = 53C06B412885128000ADA004 /* utils.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +28,13 @@
 /* Begin PBXFileReference section */
 		53484CE5287F45BE00450F05 /* finetd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = finetd; sourceTree = BUILT_PRODUCTS_DIR; };
 		53484CE8287F45BE00450F05 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		53C06B3928847CF000ADA004 /* service.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = service.h; sourceTree = "<group>"; };
+		53C06B3A28847CF000ADA004 /* service.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = service.c; sourceTree = "<group>"; };
+		53C06B3C28848C9F00ADA004 /* argprocess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = argprocess.h; sourceTree = "<group>"; };
+		53C06B3D28848C9F00ADA004 /* argprocess.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = argprocess.c; sourceTree = "<group>"; };
+		53C06B3F288509B800ADA004 /* service.sample.conf */ = {isa = PBXFileReference; lastKnownFileType = text; path = service.sample.conf; sourceTree = "<group>"; };
+		53C06B402885128000ADA004 /* utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		53C06B412885128000ADA004 /* utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +67,14 @@
 		53484CE7287F45BE00450F05 /* finetd */ = {
 			isa = PBXGroup;
 			children = (
+				53C06B3F288509B800ADA004 /* service.sample.conf */,
 				53484CE8287F45BE00450F05 /* main.c */,
+				53C06B3928847CF000ADA004 /* service.h */,
+				53C06B3A28847CF000ADA004 /* service.c */,
+				53C06B3C28848C9F00ADA004 /* argprocess.h */,
+				53C06B3D28848C9F00ADA004 /* argprocess.c */,
+				53C06B402885128000ADA004 /* utils.h */,
+				53C06B412885128000ADA004 /* utils.c */,
 			);
 			path = finetd;
 			sourceTree = "<group>";
@@ -119,7 +136,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				53C06B422885128000ADA004 /* utils.c in Sources */,
 				53484CE9287F45BE00450F05 /* main.c in Sources */,
+				53C06B3E28848C9F00ADA004 /* argprocess.c in Sources */,
+				53C06B3B28847CF000ADA004 /* service.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
