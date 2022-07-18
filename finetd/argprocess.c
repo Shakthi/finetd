@@ -18,9 +18,9 @@ processArgs(int argc, const char *argv[], struct InetServicesDefintion **allServ
 	
 	struct InetServicesDefintion servies[20];
 
-	if (1 || argc == 3 && strcmp(argv[1], "-c") == 0) {
+	if (argc == 3 && strcmp(argv[1], "-c") == 0) {
 		*totalServices = 0;
-		FILE *file = fopen("/Volumes/Development/Projects/finetd/finetd/service.sample.conf", "r");
+		FILE *file = fopen(argv[2], "r");
 		while (!feof(file)) {
 			int source, destination;
 			char command[1024];
