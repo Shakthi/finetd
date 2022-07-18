@@ -55,7 +55,7 @@ processArgs(int argc, const char *argv[], struct InetServicesDefintion **allServ
 	*allService = malloc(sizeof(servies));
 	memcpy(*allService, servies, sizeof(servies));
 
-    slogf("total servces descovered %d\n",*totalServices);
+    slogf("total servces descovered %d",*totalServices);
 
     /*
 

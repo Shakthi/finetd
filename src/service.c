@@ -15,13 +15,13 @@ pid_t execute(const char * cmd){
         char *args[100];
         char * rest = strdup(cmd);
         char* token = NULL;
-        slogf("args %s\n",cmd);
+        slogf("args %s",cmd);
 
         int i = 0;
         while ((token = strtok_r(rest, " ", &rest)))
         {
             args[i] = token;
-            slogf("args %s\n",args[i]);
+            slogf("args %s",args[i]);
             i++;
         }
         
@@ -59,7 +59,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
 
         inet_ntop(AF_INET, &(ptr->sin_addr), str, sizeof(str));
 
-        slogf("Request from %s\n", str);
+        slogf("Request from %s", str);
 
         char cmd[1024];
         sprintf(cmd, def.startCommand, def.destinationPort);
@@ -93,7 +93,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("destination socket creation");
 
             if (connect(remotes[0], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) == 0) {
-                slogf("Conected\n");
+                slogf("Conected");
 
 
                 break;
@@ -131,7 +131,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
             }
 
 
-            slogf("before service selec%d\n", k++);
+            slogf("before service selec%d", k++);
 
             struct timeval tv = {20, 0};    /* sleep for ten minutes */
 
