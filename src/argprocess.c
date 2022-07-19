@@ -10,6 +10,7 @@
 #include "argprocess.h"
 #include "service.h"
 #include "utils.h"
+#include <libgen.h>
 
 void 
 processArgs(int argc, const char *argv[], struct InetServicesDefintion **allService, int *totalServices)
@@ -19,8 +20,12 @@ processArgs(int argc, const char *argv[], struct InetServicesDefintion **allServ
 	struct InetServicesDefintion servies[20];
 
 	if (1 || argc == 3 && strcmp(argv[1], "-c") == 0) {
+        
+        char conffile[1024]="";
+        strcat(conffile, dirname(__FILE__));
+        strcat(conffile, "/service.sample.conf");
 		*totalServices = 0;
-		FILE *file = fopen("/Volumes/Development/Projects/finetd/src/service.sample.conf", "r");
+		FILE *file = fopen(conffile, "r");
 		while (!feof(file)) {
 			int source, destination;
 			char command[1024];
