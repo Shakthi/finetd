@@ -182,7 +182,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         if (connect(remotes[i], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) != 0)
                             die("new connect");
                         else
-                            printf("new connected ");
+                            slogf("new connected ");
                         maxClients++;
                         break;
                     }
