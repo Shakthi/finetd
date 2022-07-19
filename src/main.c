@@ -70,7 +70,7 @@ listenAtPort(int port)
 
 
 
-int LOG_ENABLED = 1;
+int LOG_ENABLED = 0;
 int
 main(int argc, const char *argv[])
 {
