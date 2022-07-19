@@ -142,24 +142,16 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 break;
             } else if (ret == 0) {
                 slogf("select timeout ");
-                if(!def.stopCommand){
-                    char retcmd[] = "stoping listen 12345";
-                    sprintf(retcmd, "stoping listen %5d", index);
-                    write(control[1], retcmd, sizeof(retcmd));
-                    char killcmd[] = "kill xxxxxx";
-                    sprintf(killcmd, "kill %d",pid);
-                    
-                    int ret = execute(killcmd);
-                    if (ret == -1)
-                        die("kill");
-                    
-                }
-                else{
-                    int ret = execute(def.stopCommand);
-                    if (ret == -1)
-                        die("kill");
-                    
-                }
+                char retcmd[] = "stoping listen 12345";
+                sprintf(retcmd, "stoping listen %5d", index);
+                write(control[1], retcmd, sizeof(retcmd));
+                char killcmd[] = "kill xxxxxx";
+                sprintf(killcmd, "kill %d",pid);
+                
+                int ret = execute(def.stopCommand?def.stopCommand:killcmd);
+                if (ret == -1)
+                    die("kill");
+                
                 exit(0);
             }
 
@@ -201,6 +193,8 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 if (clients[i] && FD_ISSET(clients[i], &readfds)) {
 
                     size_t count = recv(clients[i], buffer, sizeof(buffer), 0);
+                    slogf("Recevied %dbytes from client",count);
+                    
                     if (count < 0) {
                         die("recv");
                         close(clients[i]);
@@ -227,6 +221,8 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 }
                 if (remotes[i] && FD_ISSET(remotes[i], &readfds)) {
                     size_t count = recv(remotes[i], buffer, sizeof(buffer), 0);
+                    slogf("Recevied %dbytes from client",count);
+                    
                     if (count < 0) {
                         die("recieve error");
                         close(remotes[i]);
@@ -242,6 +238,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
+                        slogf("count 0 ");
 
 
                     } else
