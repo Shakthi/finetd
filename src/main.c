@@ -41,7 +41,7 @@ listenAtPort(int port)
 	int sockfd_v4, option;
 	int BACKLOG = 20;
 
-    slogf("Asked to listen at port %d", port);
+    LOG_DEBUG("Asked to listen at port %d", port);
 
 
 	if ((sockfd_v4 = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -62,7 +62,7 @@ listenAtPort(int port)
 		die("listen");
 		return -1;
 	}
-	slogf("listenning at port %d", port);
+	LOG_INFO("listenning at port %d", port);
 	return sockfd_v4;
 }
 
@@ -70,7 +70,7 @@ listenAtPort(int port)
 
 
 
-int LOG_ENABLED = 0;
+int LOG_ENABLED = 10;
 int
 main(int argc, const char *argv[])
 {
@@ -98,7 +98,7 @@ main(int argc, const char *argv[])
 	maxfd = MAX(maxfd, controlPipe[0]);
 
 	for (int i = 0; i < totalServices; i++) {
-        slogf("new service %d",allServices[i].sourcePort);
+        LOG_DEBUG("new service %d",allServices[i].sourcePort);
 		inetServicesRecord[i].masterSocket = listenAtPort(allServices[i].sourcePort);
 		inetServicesRecord[i].status = 1;
 		maxfd = MAX(maxfd, inetServicesRecord[i].masterSocket);
@@ -155,6 +155,6 @@ main(int argc, const char *argv[])
 
 
 	//insert code here...
-		slogf("Hello, World!");
+		LOG_DEBUG("Hello, World!");
 	return 0;
 }
