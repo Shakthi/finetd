@@ -10,70 +10,120 @@
 #include "argprocess.h"
 #include "service.h"
 #include "utils.h"
+#include <getopt.h>
 
-void 
-processArgs(int argc, const char *argv[], struct InetServicesDefintion **allService, int *totalServices)
+
+/** Program for ondemand loading of service on listeneing in their ports
+ */
+void
+print_usage()
+{
+	printf("Usage: finetd --config config_path --loglevel loglevelNumber \n");
+}
+
+void
+processArgs(int argc, char *argv[], struct InetServicesDefintion **allService, int *totalServices,int * loglevel)
 {
 
-	
-	struct InetServicesDefintion servies[20];
 
-	if (argc == 3 && strcmp(argv[1], "-c") == 0) {
-		*totalServices = 0;
-		FILE *file = fopen(argv[2], "r");
-		while (!feof(file)) {
-			int source, destination;
-			char command[1024];
-			if(fscanf(file, "%d %d", &source, &destination)==0)
-                break;
+	struct InetServicesDefintion services[20];
 
 
-			if(!fgets(command, 1024, file))
-                break;
-            command[strcspn(command, "\n")] = 0;
 
-			servies[*totalServices].sourcePort = source;
-			servies[*totalServices].destinationPort = destination;
+	int c;
+	char *configFilePath = NULL;
+	int option_index = 0;
 
-            char * rest = command;
-            if(*rest == ' ')
-                rest++;
-            servies[*totalServices].startCommand = strdup(strtok_r(rest, ";", &rest));
-            
-            if(rest)
-                servies[*totalServices].stopCommand = strdup(strtok_r(rest, ";", &rest));
+	while (1) {
+		struct option long_options[] = {
+			{"config", required_argument, 0, 'c'},
+			{"loglevel", required_argument, NULL, 'l'},
+			{"help", required_argument, NULL, 'h'},
 
-            
-			(*totalServices)++;
-			if (*totalServices >= 20) {
-				die("Exeeds maxsupported services");
-			}
+			{0, 0, 0, 0}
+		};
+
+		c = getopt_long(argc, argv, "c:l:h",
+				long_options, &option_index);
+		if (c == -1)
+			break;
+
+		switch (c) {
+
+		case 'c':
+			configFilePath = strdup(optarg);
+			LOG_DEBUG("configFilePath %s", configFilePath);
+			break;
+		case 'l':
+			*loglevel = atoi(optarg);
+			LOG_DEBUG("loglevel %d", *loglevel);
+			break;
+
+
+		case 'h':
+
+		default:
+			printf("Usage --config config_path --loglevel loglevelNumber\n");
 		}
-		fclose(file);
-
 	}
-	*allService = malloc(sizeof(servies));
-	memcpy(*allService, servies, sizeof(servies));
 
-    LOG_DEBUG("total servces descovered %d",*totalServices);
+	if (optind < argc) {
+		LOG_WARNING("Ignoring extra %d arguments", argc - optind);
+	}
+    
+    /*Load the services*/
+    
+	*totalServices = 0;
+	FILE *file = fopen(argv[2], "r");
+	if (!file) {
+		die("Unable to open config file %s", configFilePath);
+	}
+    
+	while (!feof(file)) {
+		int source, destination;
+		char command[1024];
+		if (fscanf(file, "%d %d", &source, &destination) == 0)
+			break;
 
-    /*
+
+		if (!fgets(command, 1024, file))
+			break;
+		command[strcspn(command, "\n")] = 0;
+
+		services[*totalServices].sourcePort = source;
+		services[*totalServices].destinationPort = destination;
+
+		char *rest = command;
+		if (*rest == ' ')
+			rest++;
+		services[*totalServices].startCommand = strdup(strtok_r(rest, ";", &rest));
+
+		if (rest)
+			services[*totalServices].stopCommand = strdup(strtok_r(rest, ";", &rest));
 
 
-     const struct InetServicesDefintion * allServices[] = {
-         {
-             2014,
-             4028,
-             "/usr/local/bin/node /usr/local/bin/serve -l 4028",
-         },
-         
-         {
-                 2020,
-                 4040,
-                 "/usr/local/bin/node /usr/local/bin/serve -l 4040",
-         }
-     };
-     */
+		(*totalServices)++;
+		if (*totalServices >= 20) {
+			die("Exceeds max supported services");
+		}
+	}
+	fclose(file);
+
+    
+    
+
+
+	*allService = malloc(sizeof(services[0]) * 20);
+	memcpy(*allService, services, sizeof(services));
+
+	LOG_INFO("total services discovered %d", *totalServices);
+
+	/*
+	 * const struct InetServicesDefintion * allServices[] = { { 2014, 4028,
+	 * "/usr/local/bin/node /usr/local/bin/serve -l 4028", },
+	 * 
+	 * { 2020, 4040, "/usr/local/bin/node /usr/local/bin/serve -l 4040", }
+	 * }; */
 
 
 

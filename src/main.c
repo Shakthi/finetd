@@ -78,7 +78,7 @@ main(int argc, const char *argv[])
 
     struct InetServicesDefintion * allServices;
     int totalServices=0;
-    processArgs(argc,argv,&allServices,&totalServices);
+    processArgs(argc,argv,&allServices,&totalServices,&LOG_ENABLED);
     
     
 

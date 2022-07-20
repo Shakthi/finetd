@@ -9,7 +9,7 @@
 #ifndef argprocess_h
 #define argprocess_h
 struct InetServicesDefintion;
-void processArgs(int argc, const char *argv[],struct InetServicesDefintion ** allService,int * totalServices);
+void processArgs(int argc,  char *argv[],struct InetServicesDefintion ** allService,int * totalServices,int * loglevel);
 #include <stdio.h>
 
 #endif /* argprocess_h */
