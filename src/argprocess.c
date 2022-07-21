@@ -13,7 +13,7 @@
 #include <getopt.h>
 
 
-/** Program for ondemand loading of service on listeneing in their ports
+/** Program for ondemand loading of service by listeneing in their ports
  */
 void
 print_usage()
@@ -22,11 +22,17 @@ print_usage()
 }
 
 void
-processArgs(int argc, char *argv[], struct InetServicesDefintion **allService, int *totalServices,int * loglevel)
+processArgs(int argc, char *argv[],
+            struct InetServicesDefintion
+            **allService,
+            int *totalServices,
+            int * loglevel
+            )
 {
 
 
 	struct InetServicesDefintion services[20];
+	
 
 
 
@@ -56,14 +62,14 @@ processArgs(int argc, char *argv[], struct InetServicesDefintion **allService, i
 			break;
 		case 'l':
 			*loglevel = atoi(optarg);
-			LOG_DEBUG("loglevel %d", *loglevel);
+			LOG_DEBUG("loglevel %d", loglevel);
 			break;
 
 
 		case 'h':
 
 		default:
-			printf("Usage --config config_path --loglevel loglevelNumber\n");
+			print_usage();
 		}
 	}
 
@@ -72,13 +78,11 @@ processArgs(int argc, char *argv[], struct InetServicesDefintion **allService, i
 	}
     
     /*Load the services*/
-    
 	*totalServices = 0;
 	FILE *file = fopen(argv[2], "r");
 	if (!file) {
 		die("Unable to open config file %s", configFilePath);
 	}
-    
 	while (!feof(file)) {
 		int source, destination;
 		char command[1024];
@@ -109,8 +113,6 @@ processArgs(int argc, char *argv[], struct InetServicesDefintion **allService, i
 	}
 	fclose(file);
 
-    
-    
 
 
 	*allService = malloc(sizeof(services[0]) * 20);
