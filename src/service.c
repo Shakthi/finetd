@@ -11,10 +11,9 @@
 pid_t execute(const char * cmd){
     pid_t pid = fork();
     if (pid == 0) {
-        LOG_DEBUG("For system  \n");
-        char *args[100];
+        char * args[strlen(cmd)];
         char * rest = strdup(cmd);
-        char* token = NULL;
+        char * token = NULL;
         LOG_DEBUG("args %s",cmd);
 
         int i = 0;
@@ -26,14 +25,28 @@ pid_t execute(const char * cmd){
         }
         
         
-        args[i]=NULL;
+        args[i] = NULL;
         execvp(args[0], args);
         die("Failed exec");
+        free(rest);//Not needed but still
 
     }
     return  pid;
 }
 
+void endService(int control[2],int index,pid_t pid,struct InetServicesDefintion def){
+    char retcmd[] = "stoping listen 12345";
+    sprintf(retcmd, "stoping listen %5d", index);
+    write(control[1], retcmd, sizeof(retcmd));
+    char killcmd[] = "kill xxxxxx";
+    sprintf(killcmd, "kill %d",pid);
+    
+    int ret = execute(def.stopCommand?def.stopCommand:killcmd);
+    if (ret == -1)
+        die("kill");
+    
+    exit(0);
+}
 
 void
 serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
@@ -63,8 +76,9 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
 
         char cmd[1024];
         sprintf(cmd, def.startCommand, def.destinationPort);
-        LOG_DEBUG("cmd %s", cmd);
 
+
+        LOG_INFO("starting command:%s",cmd);
         pid_t pid = execute(cmd);
         
         int clients[20] = {fd_new};
@@ -93,12 +107,10 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("destination socket creation");
 
             if (connect(remotes[0], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) == 0) {
-                LOG_DEBUG("Conected");
-
-
+                LOG_DEBUG("Conected remote for client 0");
                 break;
             } else {
-                perror("\ntrying to start");
+                LOG_DEBUG("trying to start");
 
                 sleep(1);
             }
@@ -110,7 +122,6 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
         fd_set readfds;
         char buffer[4096];
 
-        int k = 0;
 
         while (1) {
             FD_ZERO(&readfds);
@@ -131,7 +142,6 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
             }
 
 
-            LOG_DEBUG("before service selec%d", k++);
 
             struct timeval tv = {20, 0};    /* sleep for ten minutes */
 
@@ -142,17 +152,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 break;
             } else if (ret == 0) {
                 LOG_DEBUG("select timeout ");
-                char retcmd[] = "stoping listen 12345";
-                sprintf(retcmd, "stoping listen %5d", index);
-                write(control[1], retcmd, sizeof(retcmd));
-                char killcmd[] = "kill xxxxxx";
-                sprintf(killcmd, "kill %d",pid);
-                
-                int ret = execute(def.stopCommand?def.stopCommand:killcmd);
-                if (ret == -1)
-                    die("kill");
-                
-                exit(0);
+                endService(control,index,pid,def);
             }
 
 
@@ -180,11 +180,17 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
 
                         remotes[i] = socket(AF_INET, SOCK_STREAM, 0);
                         if (connect(remotes[i], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) != 0)
-                            die("new connect");
+                        {
+                            LOG_ERROR("Failed connection with to remote %s",def.startCommand);
+                        }
                         else
                             LOG_DEBUG("new connected ");
                         maxClients++;
                         break;
+                    }else{
+                        LOG_ERROR("reached max supported client limit");
+                        close(fd_new);
+                        
                     }
                 }
 
@@ -193,7 +199,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 if (clients[i] && FD_ISSET(clients[i], &readfds)) {
 
                     size_t count = recv(clients[i], buffer, sizeof(buffer), 0);
-                    LOG_DEBUG("Recevied %dbytes from client",count);
+                    LOG_DEBUG("Recevied %d bytes from client",count);
                     
                     if (count < 0) {
                         die("recv");
@@ -212,7 +218,8 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
-                        LOG_DEBUG("count 0 ");
+                        LOG_DEBUG("Closed event from client");
+
 
 
                     } else
@@ -221,7 +228,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 }
                 if (remotes[i] && FD_ISSET(remotes[i], &readfds)) {
                     size_t count = recv(remotes[i], buffer, sizeof(buffer), 0);
-                    LOG_DEBUG("Recevied %dbytes from client",count);
+                    LOG_DEBUG("Recevied %d bytes from remote",count);
                     
                     if (count < 0) {
                         die("recieve error");
@@ -238,9 +245,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
-                        LOG_DEBUG("count 0 ");
-
-
+                        LOG_DEBUG("Closed event from remote");
                     } else
                         send(clients[i], buffer, count, 0);
 
