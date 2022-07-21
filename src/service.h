@@ -41,7 +41,5 @@ struct InetServicesRecord {
 
 void
 serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def);
-void
-die(const char *message);
 
 #endif /* service_h */

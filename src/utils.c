@@ -10,34 +10,126 @@
 #include <stdarg.h>
 #include "utils.h"
 
+#include <errno.h>
 
 extern int LOG_ENABLED;
 
-int slogf (
-        __const char *__restrict __format, ...)
-{
-    va_list args;
- 
-    va_start(args,__format);
-    char dest[strlen(__format)+1];
-    
-    strcpy(dest,__format);
-    strcat(dest, "\n");
 
- 
-    int return_status = 0;
-    if(LOG_ENABLED)
-        return_status = vprintf( dest, args);
-    
- 
-    va_end(args);
-    return return_status;
+
+int 
+LOG_DEBUG(
+	  __const char *__restrict __format,...)
+{
+	va_list args;
+
+	va_start(args, __format);
+	char dest[strlen(__format) + 1];
+
+	strcpy(dest, __format);
+	strcat(dest, "\n");
+
+
+	int return_status = 0;
+	if (LOG_ENABLED <= 10)
+		return_status = vprintf(dest, args);
+
+
+	va_end(args);
+	return return_status;
 }
 
 
-void
-die(const char *message)
+
+int 
+LOG_WARNING(
+	    __const char *__restrict __format,...)
 {
-    perror(message);
-    exit(EXIT_FAILURE);
+	va_list args;
+
+	va_start(args, __format);
+	char dest[strlen(__format) + 1];
+
+	strcpy(dest, __format);
+	strcat(dest, "\n");
+
+
+	int return_status = 0;
+	if (LOG_ENABLED <= 30)
+		return_status = vprintf(dest, args);
+
+
+	va_end(args);
+	return return_status;
+}
+
+int 
+LOG_ERROR(
+	  __const char *__restrict __format,...)
+{
+	va_list args;
+
+	va_start(args, __format);
+	char dest[strlen(__format) + 1];
+
+	strcpy(dest, __format);
+	strcat(dest, "\n");
+
+
+	int return_status = 0;
+	if (LOG_ENABLED <= 40)
+		return_status = vprintf(dest, args);
+
+
+	va_end(args);
+	return return_status;
+}
+
+
+int 
+LOG_INFO(
+	 __const char *__restrict __format,...)
+{
+	va_list args;
+
+	va_start(args, __format);
+	char dest[strlen(__format) + 1];
+
+	strcpy(dest, __format);
+	strcat(dest, "\n");
+
+
+	int return_status = 0;
+	if (LOG_ENABLED <= 20)
+		return_status = vprintf(dest, args);
+
+
+	va_end(args);
+	return return_status;
+}
+
+void
+die(__const char *__restrict __format,...)
+{
+	va_list args;
+
+	va_start(args, __format);
+	char dest[strlen(__format) + 1024];
+
+
+
+	if (LOG_ENABLED <= 50) {
+		vsnprintf(dest, sizeof(dest), __format, args);
+        if (!errno)
+            strcat(dest, "\n");
+	}
+	va_end(args);
+
+	va_end(args);
+
+	if (errno)
+		perror(dest);
+	else
+		printf("%s", dest);
+	exit(1);
+
 }

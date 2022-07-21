@@ -11,17 +11,17 @@
 pid_t execute(const char * cmd){
     pid_t pid = fork();
     if (pid == 0) {
-        slogf("For system  \n");
+        LOG_DEBUG("For system  \n");
         char *args[100];
         char * rest = strdup(cmd);
         char* token = NULL;
-        slogf("args %s",cmd);
+        LOG_DEBUG("args %s",cmd);
 
         int i = 0;
         while ((token = strtok_r(rest, " ", &rest)))
         {
             args[i] = token;
-            slogf("args %s",args[i]);
+            LOG_DEBUG("args %s",args[i]);
             i++;
         }
         
@@ -59,11 +59,11 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
 
         inet_ntop(AF_INET, &(ptr->sin_addr), str, sizeof(str));
 
-        slogf("Request from %s", str);
+        LOG_DEBUG("Request from %s", str);
 
         char cmd[1024];
         sprintf(cmd, def.startCommand, def.destinationPort);
-        slogf("cmd %s", cmd);
+        LOG_DEBUG("cmd %s", cmd);
 
         pid_t pid = execute(cmd);
         
@@ -93,7 +93,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("destination socket creation");
 
             if (connect(remotes[0], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) == 0) {
-                slogf("Conected");
+                LOG_DEBUG("Conected");
 
 
                 break;
@@ -131,7 +131,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
             }
 
 
-            slogf("before service selec%d", k++);
+            LOG_DEBUG("before service selec%d", k++);
 
             struct timeval tv = {20, 0};    /* sleep for ten minutes */
 
@@ -141,25 +141,17 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("server select");
                 break;
             } else if (ret == 0) {
-                slogf("select timeout ");
-                if(!def.stopCommand){
-                    char retcmd[] = "stoping listen 12345";
-                    sprintf(retcmd, "stoping listen %5d", index);
-                    write(control[1], retcmd, sizeof(retcmd));
-                    char killcmd[] = "kill xxxxxx";
-                    sprintf(killcmd, "kill %d",pid);
-                    
-                    int ret = execute(killcmd);
-                    if (ret == -1)
-                        die("kill");
-                    
-                }
-                else{
-                    int ret = execute(def.stopCommand);
-                    if (ret == -1)
-                        die("kill");
-                    
-                }
+                LOG_DEBUG("select timeout ");
+                char retcmd[] = "stoping listen 12345";
+                sprintf(retcmd, "stoping listen %5d", index);
+                write(control[1], retcmd, sizeof(retcmd));
+                char killcmd[] = "kill xxxxxx";
+                sprintf(killcmd, "kill %d",pid);
+                
+                int ret = execute(def.stopCommand?def.stopCommand:killcmd);
+                if (ret == -1)
+                    die("kill");
+                
                 exit(0);
             }
 
@@ -190,7 +182,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         if (connect(remotes[i], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) != 0)
                             die("new connect");
                         else
-                            printf("new connected ");
+                            LOG_DEBUG("new connected ");
                         maxClients++;
                         break;
                     }
@@ -201,6 +193,8 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 if (clients[i] && FD_ISSET(clients[i], &readfds)) {
 
                     size_t count = recv(clients[i], buffer, sizeof(buffer), 0);
+                    LOG_DEBUG("Recevied %dbytes from client",count);
+                    
                     if (count < 0) {
                         die("recv");
                         close(clients[i]);
@@ -208,7 +202,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
-                        slogf("-1");
+                        LOG_DEBUG("-1");
                     }
                     if (count == 0) {
                         
@@ -218,7 +212,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
-                        slogf("count 0 ");
+                        LOG_DEBUG("count 0 ");
 
 
                     } else
@@ -227,6 +221,8 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 }
                 if (remotes[i] && FD_ISSET(remotes[i], &readfds)) {
                     size_t count = recv(remotes[i], buffer, sizeof(buffer), 0);
+                    LOG_DEBUG("Recevied %dbytes from client",count);
+                    
                     if (count < 0) {
                         die("recieve error");
                         close(remotes[i]);
@@ -242,6 +238,7 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                         clients[i] = 0;
                         remotes[i] = 0;
                         maxClients--;
+                        LOG_DEBUG("count 0 ");
 
 
                     } else

@@ -10,7 +10,19 @@
 #define untils_h
 
 #include <stdio.h>
-int slogf (
+int LOG_DEBUG (
            __const char *__restrict __format, ...);
+int LOG_INFO (
+__const char *__restrict __format, ...);
+
+int LOG_WARNING (
+__const char *__restrict __format, ...);
+
+int LOG_ERROR (
+__const char *__restrict __format, ...);
+
+void
+die(__const char *__restrict __format, ...);
+
 #endif /* untils_h */
-void die(const char *message);
+

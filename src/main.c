@@ -41,7 +41,7 @@ listenAtPort(int port)
 	int sockfd_v4, option;
 	int BACKLOG = 20;
 
-    slogf("Asked to listen at port %d", port);
+    LOG_DEBUG("Asked to listen at port %d", port);
 
 
 	if ((sockfd_v4 = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -62,23 +62,28 @@ listenAtPort(int port)
 		die("listen");
 		return -1;
 	}
-	slogf("listenning at port %d", port);
+	LOG_INFO("listenning at port %d", port);
 	return sockfd_v4;
 }
 
+enum {
+    serviceIdle=1,
+    serviceBusy=2
+    
+};
 
 
 
 
-int LOG_ENABLED = 1;
+int LOG_ENABLED = 10;
 int
-main(int argc, const char *argv[])
+main(int argc,  char *argv[])
 {
 
 
     struct InetServicesDefintion * allServices;
     int totalServices=0;
-    processArgs(argc,argv,&allServices,&totalServices);
+    processArgs(argc,argv,&allServices,&totalServices,&LOG_ENABLED);
     
     
 
@@ -91,60 +96,60 @@ main(int argc, const char *argv[])
 		die("cannot create pipe");
 
 
-
+    LOG_INFO("Starting server");
 
 	fd_set readfds;
 	int maxfd = 0;
 	maxfd = MAX(maxfd, controlPipe[0]);
 
 	for (int i = 0; i < totalServices; i++) {
-        slogf("new service %d",allServices[i].sourcePort);
+        LOG_DEBUG("new service %d",allServices[i].sourcePort);
 		inetServicesRecord[i].masterSocket = listenAtPort(allServices[i].sourcePort);
-		inetServicesRecord[i].status = 1;
+		inetServicesRecord[i].status = serviceIdle;
 		maxfd = MAX(maxfd, inetServicesRecord[i].masterSocket);
-
 	}
 
+    LOG_INFO("Entering main loop with %d services",totalServices);
 
 	while (1) {
 		FD_ZERO(&readfds);
 		FD_SET(controlPipe[0], &readfds);
 
 		for (int i = 0; i < ArraySize(inetServicesRecord); i++) {
-			if (inetServicesRecord[i].status == 1)
+			if (inetServicesRecord[i].status == serviceIdle)
 				FD_SET(inetServicesRecord[i].masterSocket, &readfds);
 		}
 
 
 		int activity = select(maxfd + 1, &readfds, NULL, NULL, NULL);
-		if ((activity < 0) && (errno != EINTR)) {
+		if ((activity < 0) ) {
 			die("select error");
 		}
 		for (int i = 0; i < ArraySize(inetServicesRecord); i++) {
-			if (inetServicesRecord[i].status == 1) {
+			if (inetServicesRecord[i].status == serviceIdle) {
 				if (FD_ISSET(inetServicesRecord[i].masterSocket, &readfds)) {
 					serviceFd(inetServicesRecord[i].masterSocket, i, controlPipe, allServices[i]);
-					inetServicesRecord[i].status = 2;
-					//busy
+					inetServicesRecord[i].status = serviceBusy;
 				}
 			}
 		}
 
 
-
+        /* We listen for message service exit message at the pipe*/
 		if (FD_ISSET(controlPipe[0], &readfds)) {
+            /*Message template*/
 			char message[] = "stoping listen 00000";
 			read(controlPipe[0], message, sizeof(message));
 
-			char stoping[] = "stoping";
-			char listen[] = "listen";
+            /* signature of closure message*/
+			char stoping[250];
+			char listen[250];
 			int serviceIndex;
 
 			sscanf(message, "%s %s %d", stoping, listen, &serviceIndex);
 
 			if (strcmp(stoping, "stoping") == 0 && strcmp(listen, "listen") == 0) {
-				inetServicesRecord[serviceIndex].status = 1;
-				//active, not busy
+				inetServicesRecord[serviceIndex].status = serviceIdle;
 			}
 		}
 	}
@@ -155,6 +160,6 @@ main(int argc, const char *argv[])
 
 
 	//insert code here...
-		slogf("Hello, World!");
+		LOG_DEBUG("Hello, World!");
 	return 0;
 }
