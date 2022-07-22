@@ -35,13 +35,13 @@ pid_t execute(const char * cmd){
 }
 
 void endService(int control[2],int index,pid_t pid,struct InetServicesDefintion def){
-    char retcmd[] = "stoping listen 12345";
-    sprintf(retcmd, "stoping listen %5d", index);
-    write(control[1], retcmd, sizeof(retcmd));
-    char killcmd[] = "kill xxxxxx";
-    sprintf(killcmd, "kill %d",pid);
+    char cmd[] = "stopping listen 12345";
+    sprintf(cmd, "stopping listen %5d", index);
+    write(control[1], cmd, sizeof(cmd));
+    char killCmd[] = "kill xxxxxx";
+    sprintf(killCmd, "kill %d",pid);
     
-    int ret = execute(def.stopCommand?def.stopCommand:killcmd);
+    int ret = execute(def.stopCommand?def.stopCommand:killCmd);
     if (ret == -1)
         die("kill");
     
@@ -107,10 +107,10 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 die("destination socket creation");
 
             if (connect(remotes[0], (struct sockaddr *)&remote_addr, sizeof(remote_addr)) == 0) {
-                LOG_DEBUG("Conected remote for client 0");
+                LOG_DEBUG("Connected remote for client 0");
                 break;
             } else {
-                LOG_DEBUG("trying to start");
+                LOG_DEBUG("Waiting to connection");
 
                 sleep(1);
             }
@@ -228,10 +228,10 @@ serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def)
                 }
                 if (remotes[i] && FD_ISSET(remotes[i], &readfds)) {
                     size_t count = recv(remotes[i], buffer, sizeof(buffer), 0);
-                    LOG_DEBUG("Recevied %d bytes from remote",count);
+                    LOG_DEBUG("Received %d bytes from remote",count);
                     
                     if (count < 0) {
-                        die("recieve error");
+                        die("receive error");
                         close(remotes[i]);
                         close(clients[i]);
                         clients[i] = 0;

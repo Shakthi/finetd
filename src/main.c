@@ -3,7 +3,7 @@
 // finetd
 //
 //Created by Shakthi Prasad G S on 13 / 07 / 22.
-// Copyright ï ¿½ï¿½ï¿½ï¿½2022 Shakthi Prasad G S.All rights reserved.
+// Copyright ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½2022 Shakthi Prasad G S.All rights reserved.
 //
 
 #include <stdio.h>
@@ -62,7 +62,7 @@ listenAtPort(int port)
 		die("listen");
 		return -1;
 	}
-	LOG_INFO("listenning at port %d", port);
+	LOG_INFO("listening at port %d", port);
 	return sockfd_v4;
 }
 
@@ -98,36 +98,36 @@ main(int argc,  char *argv[])
 
     LOG_INFO("Starting server");
 
-	fd_set readfds;
-	int maxfd = 0;
-	maxfd = MAX(maxfd, controlPipe[0]);
+	fd_set readFds;
+	int maxFd = 0;
+	maxFd = MAX(maxFd, controlPipe[0]);
 
 	for (int i = 0; i < totalServices; i++) {
         LOG_DEBUG("new service %d",allServices[i].sourcePort);
 		inetServicesRecord[i].masterSocket = listenAtPort(allServices[i].sourcePort);
 		inetServicesRecord[i].status = serviceIdle;
-		maxfd = MAX(maxfd, inetServicesRecord[i].masterSocket);
+		maxFd = MAX(maxFd, inetServicesRecord[i].masterSocket);
 	}
 
     LOG_INFO("Entering main loop with %d services",totalServices);
 
 	while (1) {
-		FD_ZERO(&readfds);
-		FD_SET(controlPipe[0], &readfds);
+		FD_ZERO(&readFds);
+		FD_SET(controlPipe[0], &readFds);
 
 		for (int i = 0; i < ArraySize(inetServicesRecord); i++) {
 			if (inetServicesRecord[i].status == serviceIdle)
-				FD_SET(inetServicesRecord[i].masterSocket, &readfds);
+				FD_SET(inetServicesRecord[i].masterSocket, &readFds);
 		}
 
 
-		int activity = select(maxfd + 1, &readfds, NULL, NULL, NULL);
+		int activity = select(maxFd + 1, &readFds, NULL, NULL, NULL);
 		if ((activity < 0) ) {
 			die("select error");
 		}
 		for (int i = 0; i < ArraySize(inetServicesRecord); i++) {
 			if (inetServicesRecord[i].status == serviceIdle) {
-				if (FD_ISSET(inetServicesRecord[i].masterSocket, &readfds)) {
+				if (FD_ISSET(inetServicesRecord[i].masterSocket, &readFds)) {
 					serviceFd(inetServicesRecord[i].masterSocket, i, controlPipe, allServices[i]);
 					inetServicesRecord[i].status = serviceBusy;
 				}
@@ -136,19 +136,19 @@ main(int argc,  char *argv[])
 
 
         /* We listen for message service exit message at the pipe*/
-		if (FD_ISSET(controlPipe[0], &readfds)) {
+		if (FD_ISSET(controlPipe[0], &readFds)) {
             /*Message template*/
-			char message[] = "stoping listen 00000";
+			char message[] = "stopping listen 00000";
 			read(controlPipe[0], message, sizeof(message));
 
             /* signature of closure message*/
-			char stoping[250];
+			char stopping[250];
 			char listen[250];
 			int serviceIndex;
 
-			sscanf(message, "%s %s %d", stoping, listen, &serviceIndex);
+			sscanf(message, "%s %s %d", stopping, listen, &serviceIndex);
 
-			if (strcmp(stoping, "stoping") == 0 && strcmp(listen, "listen") == 0) {
+			if (strcmp(stopping, "stopping") == 0 && strcmp(listen, "listen") == 0) {
 				inetServicesRecord[serviceIndex].status = serviceIdle;
 			}
 		}

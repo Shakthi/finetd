@@ -16,7 +16,7 @@
 
 
 
-/** Program for ondemand loading of service by listeneing in their ports
+/** Program for ondemand loading of service by listening in their ports
  */
 void
 print_usage()
