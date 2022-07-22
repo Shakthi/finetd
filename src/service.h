@@ -9,37 +9,33 @@
 #ifndef service_h
 #define service_h
 
-#include <stdio.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <errno.h>
-//
-#include <errno.h>
-#include <sys/select.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <string.h>
-#include <signal.h>
-#include <unistd.h>
 #include "utils.h"
-
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 struct InetServicesDefintion {
-    int sourcePort;
-    int destinationPort;
-    const char *startCommand;
-    const char *stopCommand;
+  int sourcePort;
+  int destinationPort;
+  const char *startCommand;
+  const char *stopCommand;
 };
-
 
 struct InetServicesRecord {
-    int status;
-    pid_t pid;
-    int masterSocket;
+  int status;
+  pid_t pid;
+  int masterSocket;
 };
 
-void
-serviceFd(int fd, int index, int control[2], struct InetServicesDefintion def);
+void serviceFd(int fd, int index, int control[2],
+               struct InetServicesDefintion def);
+int listenAtPort(int port);
 
 #endif /* service_h */

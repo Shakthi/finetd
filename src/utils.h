@@ -6,23 +6,16 @@
 //  Copyright © 2022 Shakthi Prasad G S. All rights reserved.
 //
 
-#ifndef untils_h
-#define untils_h
+#ifndef UTILS_h
+#define UTILS_h
 
-#include <stdio.h>
-int LOG_DEBUG (
-           __const char *__restrict __format, ...);
-int LOG_INFO (
-__const char *__restrict __format, ...);
+int LOG_DEBUG(__const char *__restrict __format, ...);
+int LOG_INFO(__const char *__restrict __format, ...);
 
-int LOG_WARNING (
-__const char *__restrict __format, ...);
+int LOG_WARNING(__const char *__restrict __format, ...);
 
-int LOG_ERROR (
-__const char *__restrict __format, ...);
+int LOG_ERROR(__const char *__restrict __format, ...);
 
-void
-die(__const char *__restrict __format, ...);
+void die(__const char *__restrict __format, ...);
 
-#endif /* untils_h */
-
+#endif /* UTILS_h */
