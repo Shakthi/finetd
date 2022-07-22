@@ -11,7 +11,7 @@
 #include <stdio.h>
 struct InetServicesDefintion;
 void processArgs(int argc, char *argv[],
-                 struct InetServicesDefintion **allService, int *totalServices,
+                 struct InetServicesDefintion *allService, int *totalServices,
                  int *loglevel);
 
 #endif /* argprocess_h */

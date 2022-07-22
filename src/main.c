@@ -17,9 +17,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define ArraySize(x) (sizeof(x) / sizeof(x[0]))
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#define MIN(x, y) (((x) < (y)) ? (x) : (y)
 
 #include "argprocess.h"
 #include "service.h"
@@ -34,11 +31,12 @@ int LOG_ENABLED = 10;
 int main(int argc, char *argv[]) {
 
   struct InetServicesRecord inetServicesRecord[20] = {};
-  struct InetServicesDefintion *allServices;
-  int totalServices = 0;
-  int controlPipe[2]; /* Pipe to signal death of child */
+  struct InetServicesDefintion allServices[20];
 
-  processArgs(argc, argv, &allServices, &totalServices, &LOG_ENABLED);
+  int totalServices = 0;
+  int controlPipe[2]; // Pipe to signal death of child
+
+  processArgs(argc, argv, allServices, &totalServices, &LOG_ENABLED);
 
   if (pipe(controlPipe) == -1)
     die("cannot create pipe");

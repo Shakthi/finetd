@@ -61,15 +61,27 @@ pid_t execute(const char *cmd) {
   return pid;
 }
 
+void substitutePid(char *input, pid_t pid) {
+    char pidString[100];
+    sprintf(pidString,"%d",pid);
+    str_replace_inplace(input,"%p",pidString,input);
+}
+
 void endService(int control[2], int index, pid_t pid,
                 struct InetServicesDefintion def) {
-  char cmd[] = "stopping listen 12345";
-  sprintf(cmd, "stopping listen %5d", index);
-  write(control[1], cmd, sizeof(cmd));
-  char killCmd[] = "kill xxxxxx";
-  sprintf(killCmd, "kill %d", pid);
+  char msg[] = "stopping listen 12345";
+  sprintf(msg, "stopping listen %5d", index);
+  write(control[1], msg, sizeof(msg));
 
-  int ret = execute(def.stopCommand ? def.stopCommand : killCmd);
+  char cmd[1024];
+  if (!def.stopCommand) {
+    strcpy(cmd, "kill %p");
+  } else {
+    strcpy(cmd, def.stopCommand);
+  }
+  substitutePid(cmd, pid);
+
+  int ret = execute(cmd);
   if (ret == -1)
     die("kill");
 
@@ -148,8 +160,8 @@ void serviceFd(int fd, int index, int control[2],
           FD_SET(clients[i], &readfds);
           FD_SET(remotes[i], &readfds);
 
-          maxFd = maxFd > clients[i] ? maxFd : clients[i];
-          maxFd = maxFd > remotes[i] ? maxFd : remotes[i];
+          maxFd = MAX(maxFd,clients[i]);
+          maxFd = MAX(maxFd,remotes[i]);
           clientCount++;
         }
       }

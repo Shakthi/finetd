@@ -21,10 +21,10 @@ void print_usage() {
 }
 
 void processArgs(int argc, char *argv[],
-                 struct InetServicesDefintion **allService, int *totalServices,
+                 struct InetServicesDefintion *allService, int *totalServices,
                  int *loglevel) {
 
-  struct InetServicesDefintion services[20];
+  struct InetServicesDefintion *services = allService;
 
   int c;
   char *configFilePath = NULL;
@@ -110,9 +110,6 @@ void processArgs(int argc, char *argv[],
     }
   }
   fclose(file);
-
-  *allService = malloc(sizeof(services[0]) * 20);
-  memcpy(*allService, services, sizeof(services));
 
   LOG_INFO("total services discovered %d", *totalServices);
 
