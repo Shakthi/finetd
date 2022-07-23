@@ -83,8 +83,10 @@ void processArgs(int argc, char *argv[],
     LOG_WARNING("Ignoring extra %d arguments", argc - optind);
   }
 
-  if (!configFilePath)
-    die("config file not provided");
+    if (!configFilePath){
+      print_usage();
+      die("config file not provided");
+    }
 
   /*Load the services*/
   *totalServices = 0;
