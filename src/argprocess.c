@@ -17,7 +17,8 @@
 /** Program for ondemand loading of service by listening in their ports
  */
 void print_usage() {
-  printf("Usage: finetd --config config_path --loglevel loglevelNumber -t timeOutSeconds\n");
+  printf("Usage: finetd --config config_path --loglevel loglevelNumber -t "
+         "timeOutSeconds\n");
 }
 
 void processArgs(int argc, char *argv[],
@@ -83,10 +84,10 @@ void processArgs(int argc, char *argv[],
     LOG_WARNING("Ignoring extra %d arguments", argc - optind);
   }
 
-    if (!configFilePath){
-      print_usage();
-      die("config file not provided");
-    }
+  if (!configFilePath) {
+    print_usage();
+    die("config file not provided");
+  }
 
   /*Load the services*/
   *totalServices = 0;
