@@ -3,7 +3,7 @@
 Finetd is a xinetd inspired super-server that loads services on demand based on socket events.
 
 # Why?
-Finetd created to help to run services on low power devices such as raspberrypi. I tried to run a git server (gitea) on raspeberrypi! 
+Finetd created to help to run services on low power devices such as raspberrypi. I tried to run a git server (gitea) on *Raspeberrypi Zero W*! 
 Gitea was running smoothly, however it was consuming quite a chunk of cpu load even when it was idle. Finetd solved this issue 
 by loading required server on demand, finetd listened on proxy port and forwarded requests to port where gitea was running. 
 finetd stops server if there is no request to the server for specified time.
