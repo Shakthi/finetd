@@ -34,9 +34,13 @@ int main(int argc, char *argv[]) {
   struct InetServicesDefintion allServices[20];
 
   int totalServices = 0;
+  int serviceTimeOut = 3600;
+
+    
   int controlPipe[2]; // Pipe to signal death of child
 
-  processArgs(argc, argv, allServices, &totalServices, &LOG_ENABLED);
+  processArgs(argc, argv, allServices, &totalServices,
+              &LOG_ENABLED,&serviceTimeOut);
 
   if (pipe(controlPipe) == -1)
     die("cannot create pipe");
@@ -74,7 +78,7 @@ int main(int argc, char *argv[]) {
       if (inetServicesRecord[i].status == serviceIdle) {
         if (FD_ISSET(inetServicesRecord[i].masterSocket, &readFds)) {
           serviceFd(inetServicesRecord[i].masterSocket, i, controlPipe,
-                    allServices[i]);
+                    allServices[i],serviceTimeOut);
           inetServicesRecord[i].status = serviceBusy;
         }
       }

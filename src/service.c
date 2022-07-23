@@ -93,7 +93,7 @@ void endService(int control[2], int index, pid_t pid,
 }
 
 void serviceFd(int fd, int index, int control[2],
-               struct InetServicesDefintion def) {
+               struct InetServicesDefintion def,int serviceTimeOut) {
 
   pid_t pid = fork();
 
@@ -170,7 +170,7 @@ void serviceFd(int fd, int index, int control[2],
         }
       }
 
-      struct timeval tv = {20, 0}; /* sleep for ten minutes */
+      struct timeval tv = {serviceTimeOut, 0};
 
       int ret = select(maxFd + 1, &readfds, NULL, NULL, &tv);
       if (ret < 0) {

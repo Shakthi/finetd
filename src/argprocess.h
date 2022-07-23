@@ -12,6 +12,6 @@
 struct InetServicesDefintion;
 void processArgs(int argc, char *argv[],
                  struct InetServicesDefintion *allService, int *totalServices,
-                 int *loglevel);
+                 int *loglevel,int * timeOut);
 
 #endif /* argprocess_h */

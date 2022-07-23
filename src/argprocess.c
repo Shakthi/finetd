@@ -17,12 +17,12 @@
 /** Program for ondemand loading of service by listening in their ports
  */
 void print_usage() {
-  printf("Usage: finetd --config config_path --loglevel loglevelNumber \n");
+  printf("Usage: finetd --config config_path --loglevel loglevelNumber -t timeOutSeconds\n");
 }
 
 void processArgs(int argc, char *argv[],
                  struct InetServicesDefintion *allService, int *totalServices,
-                 int *loglevel) {
+                 int *loglevel, int *timeOut) {
 
   struct InetServicesDefintion *services = allService;
 
@@ -34,10 +34,11 @@ void processArgs(int argc, char *argv[],
     struct option long_options[] = {{"config", required_argument, 0, 'c'},
                                     {"loglevel", required_argument, NULL, 'l'},
                                     {"help", required_argument, NULL, 'h'},
-                                    {"testcase", 0, NULL, 't'},
+                                    {"timeout", required_argument, NULL, 't'},
+                                    {"testcase", 0, NULL, 'T'},
                                     {0, 0, 0, 0}};
 
-    c = getopt_long(argc, argv, "c:l:ht", long_options, &option_index);
+    c = getopt_long(argc, argv, "c:l:t:hT", long_options, &option_index);
     if (c == -1)
       break;
 
@@ -47,18 +48,26 @@ void processArgs(int argc, char *argv[],
       configFilePath = strdup(optarg);
       LOG_DEBUG("configFilePath %s", configFilePath);
       break;
+
     case 'l':
       *loglevel = atoi(optarg);
       LOG_DEBUG("loglevel %d", *loglevel);
       break;
 
     case 't':
+      *timeOut = atoi(optarg);
+      LOG_DEBUG("timeOut %d", *timeOut);
+      break;
+
+    case 'T':
       /* test case for debug*/
       {
         char conffile[1024] = "";
         strcat(conffile, dirname(__FILE__));
         strcat(conffile, "/service.sample.conf");
         configFilePath = strdup(conffile);
+        *timeOut = 15;
+        LOG_DEBUG("timeOut %d", *timeOut);
         LOG_DEBUG("configFilePath %s", configFilePath);
       }
       break;

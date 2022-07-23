@@ -35,7 +35,7 @@ struct InetServicesRecord {
 };
 
 void serviceFd(int fd, int index, int control[2],
-               struct InetServicesDefintion def);
+               struct InetServicesDefintion def,int serviceTimeOut);
 int listenAtPort(int port);
 
 #endif /* service_h */
