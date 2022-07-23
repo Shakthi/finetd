@@ -7,7 +7,10 @@
 //
 
 #include "service.h"
-
+/*
+  listens on a given port and ipaddress 0.0.0.0 which returns master socket for
+  that.
+ */
 int listenAtPort(int port) {
   /* Create IPv4 socket */
   struct sockaddr_in serv_addr4;
@@ -38,6 +41,7 @@ int listenAtPort(int port) {
   return sockfd_v4;
 }
 
+/* Execute the given command as child. Returns pid of child*/
 pid_t execute(const char *cmd) {
   pid_t pid = fork();
   if (pid == 0) {
@@ -62,9 +66,9 @@ pid_t execute(const char *cmd) {
 }
 
 void substitutePid(char *input, pid_t pid) {
-    char pidString[100];
-    sprintf(pidString,"%d",pid);
-    str_replace_inplace(input,"%p",pidString,input);
+  char pidString[100];
+  sprintf(pidString, "%d", pid);
+  str_replace_inplace(input, "%p", pidString, input);
 }
 
 void endService(int control[2], int index, pid_t pid,
@@ -160,8 +164,8 @@ void serviceFd(int fd, int index, int control[2],
           FD_SET(clients[i], &readfds);
           FD_SET(remotes[i], &readfds);
 
-          maxFd = MAX(maxFd,clients[i]);
-          maxFd = MAX(maxFd,remotes[i]);
+          maxFd = MAX(maxFd, clients[i]);
+          maxFd = MAX(maxFd, remotes[i]);
           clientCount++;
         }
       }
