@@ -188,8 +188,10 @@ void serviceFd(int fd, int index, int control[2],
           die("read new client");
         }
 
+        int foundAClientSlot = 0;
         for (int i = 0; i < 20; i++) {
           if (clients[i] == 0) {
+            foundAClientSlot = 1;
             clients[i] = fd_new;
             struct sockaddr_in remote_addr;
             remote_addr.sin_family = AF_INET;
@@ -205,10 +207,11 @@ void serviceFd(int fd, int index, int control[2],
               LOG_DEBUG("new connected ");
             maxClients++;
             break;
-          } else {
-            LOG_ERROR("reached max supported client limit");
-            close(fd_new);
           }
+        }
+        if (foundAClientSlot != 1) {
+          LOG_ERROR("reached max supported client limit");
+          close(fd_new);
         }
       }
       for (int i = 0, clientCount = 0; (i < 20 && clientCount < maxClients);
